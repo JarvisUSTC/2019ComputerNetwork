@@ -3,7 +3,7 @@ using namespace std;
 
 int main(){
     //先输入文件名，看文件是否能创建成功
-    char filename[100] = "testdata3.txt";  //文件名
+    char filename[100] = "output.txt";  //文件名
     // printf("Input filename to save: ");
     // cin.getline(filename,100);
     FILE *fp = fopen(filename, "wb");  //以二进制方式打开（创建）文件
@@ -19,7 +19,7 @@ int main(){
     memset(&serv_addr, 0, sizeof(serv_addr));  //每个字节都用0填充
     serv_addr.sin_family = AF_INET;  //使用IPv4地址
     serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");  //具体的IP地址
-    serv_addr.sin_port = htons(1240);  //端口
+    serv_addr.sin_port = htons(1241);  //端口
     connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 
     expectedseqnum = 0;
@@ -34,6 +34,12 @@ int main(){
     {
     		recvPackage = (package*)buffer;
     		cout<<"expectedseqnum:"<<expectedseqnum<<endl;
+            if(recvPackage->header.btcp_seq < expectedseqnum)
+            {
+                cout<<"ack old"<<endl;
+                package* sndpkt = data_package(expectedseqnum,recvPackage->header.btcp_seq,0,WIN_SIZE,0,NULL);
+                write(sock,(void*)sndpkt,sizeof(package));
+            }
     		if(recvPackage->header.btcp_seq == expectedseqnum)
     		{
     			fwrite(recvPackage->payload,recvPackage->header.data_off,1,fp);
